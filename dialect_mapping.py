@@ -1,4 +1,5 @@
 DIALECT_MAP = [
+    ("кетяпман", "бораяпман"),
     ("ketvotti", "ketayapti"),
     ("ketvomman", "ketayapman"),
     ("kema otdi", "keldik"),
@@ -20,4 +21,3 @@ def map_dialect(text: str):
             return dialect, literary
 
     return None, None
-
