@@ -1,0 +1,19 @@
+import librosa
+import numpy as np
+
+# Audio yuklash
+y, sr = librosa.load("sheva1.wav", sr=None)
+
+# Fourier Transform
+fft_vals = np.fft.rfft(y)
+fft_mag = np.abs(fft_vals)
+
+# Frequencies
+freqs = np.fft.rfftfreq(len(y), d=1/sr)
+
+# Eng kuchli 10 ta chastota
+top_indices = np.argsort(fft_mag)[-10:][::-1]
+
+print("Top 10 dominant frequencies (Hz):")
+for i in top_indices:
+    print(f"{freqs[i]:.2f} Hz  ->  amplitude {fft_mag[i]:.2f}")
