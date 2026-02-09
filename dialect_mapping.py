@@ -1,23 +1,16 @@
-DIALECT_MAP = [
-    ("кетяпман", "бораяпман"),
-    ("ketvotti", "ketayapti"),
-    ("ketvomman", "ketayapman"),
-    ("kema otdi", "keldik"),
-    ("borib otdi", "bordik"),
-    ("chiqib otdi", "chiqdik"),
-    ("obod", "bo‘ldi"),
-    ("ketti", "ketdik"),
-    ("kettu", "ketdik"),
-]
+DIALECT_MAP = {
+    "мен мактабга кетяпман": "мен мактабга бораяпман",
+    "кетвотти": "кетяпти",
+    "кетвоман": "кетяпман",
+}
 
 def map_dialect(text: str):
     if not text:
         return None, None
 
-    text = text.lower()
+    text = text.lower().strip()
 
-    for dialect, literary in DIALECT_MAP:
-        if dialect in text:
-            return dialect, literary
+    if text in DIALECT_MAP:
+        return text, DIALECT_MAP[text]
 
     return None, None
