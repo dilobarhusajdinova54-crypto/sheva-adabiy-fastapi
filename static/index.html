@@ -19,8 +19,19 @@
         🎙️ Gapiring
     </button>
 
-    <p id="recognized" class="mt-4 text-gray-700"></p>
-    <p id="result" class="mt-4 text-xl text-blue-700 font-semibold"></p>
+    <div id="output" class="mt-6 text-left hidden">
+        <p id="recognized" class="text-gray-700 mb-2"></p>
+        <p id="result" class="text-blue-700 font-semibold mb-3"></p>
+
+        <!-- AI explanation -->
+        <div
+            id="aiBox"
+            class="hidden mt-3 p-4 bg-green-50 border-l-4 border-green-600 text-gray-800 rounded"
+        >
+            <p class="font-semibold mb-1">🤖 AI izoh:</p>
+            <p id="aiExplanation"></p>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -39,10 +50,11 @@ function startRecognition() {
 
     recognition.onresult = async function (event) {
         const text = event.results[0][0].transcript;
+
+        document.getElementById("output").classList.remove("hidden");
         document.getElementById("recognized").innerText =
             "🗣️ Sheva: " + text;
 
-        // backend ga yuboramiz
         const response = await fetch("/translate_text", {
             method: "POST",
             headers: {
@@ -53,12 +65,22 @@ function startRecognition() {
 
         const data = await response.json();
 
+        // Adabiy so‘z
         if (data.literary_word) {
             document.getElementById("result").innerText =
                 "📘 Adabiy: " + data.literary_word;
         } else {
             document.getElementById("result").innerText =
                 "⚠️ Adabiy variant topilmadi";
+        }
+
+        // AI izoh
+        if (data.ai_explanation) {
+            document.getElementById("aiBox").classList.remove("hidden");
+            document.getElementById("aiExplanation").innerText =
+                data.ai_explanation;
+        } else {
+            document.getElementById("aiBox").classList.add("hidden");
         }
     };
 
