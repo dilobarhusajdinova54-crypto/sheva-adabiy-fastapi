@@ -1,3 +1,4 @@
+from ai_explainer import explain_word
 from fastapi import FastAPI, Body
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
@@ -8,6 +9,7 @@ from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 
 from dialect_mapping import map_dialect
+from ai_explainer import explain_word   # 🔹 AI izoh qo‘shildi
 
 # ---------------- APP ----------------
 app = FastAPI()
@@ -22,7 +24,7 @@ def root():
 
 # ---------------- MONGODB (SAFE MODE) ----------------
 MONGO_URL = os.getenv("MONGO_URL")
-col = None  # default: Mongo ishlamasin
+col = None  # Mongo majburiy emas
 
 if MONGO_URL:
     try:
@@ -32,7 +34,7 @@ if MONGO_URL:
         )
         db = client["dialect_db"]
         col = db["toshkent_mapping"]
-        client.server_info()  # connection test
+        client.server_info()
         print("✅ MongoDB connected")
     except ServerSelectionTimeoutError:
         print("⚠️ MongoDB not reachable, fallback to static mapping")
@@ -41,39 +43,43 @@ if MONGO_URL:
         print("⚠️ MongoDB error:", e)
         col = None
 
-# ---------------- TEXT TRANSLATION ----------------
+# ---------------- TEXT TRANSLATION + AI ----------------
 @app.post("/translate_text")
 async def translate_text(payload: dict = Body(...)):
     raw_text = payload.get("text", "")
 
     if not raw_text:
-        return {
-            "error": "text field is required"
-        }
+        return {"error": "text field is required"}
 
     # normalization
     text = raw_text.lower().strip()
     text = re.sub(r"[^\w\s]", "", text)
 
-    # try MongoDB first
+    literary_word = None
+    source = "mapping"
+
+    # 1️⃣ MongoDB
     if col is not None:
         try:
             doc = col.find_one({"dialect_word": text})
             if doc:
-                return {
-                    "recognized_text": text,
-                    "literary_word": doc.get("literary_word", ""),
-                    "source": "mongodb"
-                }
+                literary_word = doc.get("literary_word")
+                source = "mongodb"
         except Exception as e:
-            # Mongo ishlamasa ham API yiqilmaydi
             print("Mongo query error:", e)
 
-    # fallback static mapping
-    _, literary = map_dialect(text)
+    # 2️⃣ Static mapping
+    if not literary_word:
+        _, literary_word = map_dialect(text)
+
+    # 3️⃣ AI explanation
+    ai_explanation = None
+    if literary_word:
+        ai_explanation = explain_word(literary_word)
 
     return {
         "recognized_text": text,
-        "literary_word": literary,
-        "source": "mapping"
+        "literary_word": literary_word,
+        "source": source,
+        "ai_explanation": ai_explanation
     }
