@@ -1,8 +1,14 @@
-DIALECT_MAP = {
-    "мен мактабга кетяпман": "мен мактабга бораяпман",
-    "кетвотти": "кетяпти",
-    "кетвоман": "кетяпман",
-}
+DIALECT_MAP = [
+    ("ketvotti", "ketayapti"),
+    ("kevotti", "kelyapti"),   # ✅ ТЎҒРИ ВАРИАНТ
+    ("ketvomman", "ketayapman"),
+    ("kema otdi", "keldik"),
+    ("borib otdi", "bordik"),
+    ("chiqib otdi", "chiqdik"),
+    ("obod", "bo‘ldi"),
+    ("ketti", "ketdik"),
+    ("kettu", "ketdik"),
+]
 
 def map_dialect(text: str):
     if not text:
