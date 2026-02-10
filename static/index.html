@@ -1,124 +1,70 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8">
-  <title>Sheva → Adabiy Qidiruv</title>
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Sheva → Adabiy til (Voice Demo)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
 
-<body
-  class="min-h-screen flex items-center justify-center text-gray-800 relative overflow-hidden"
-  style="
-    background-color: #fde2e4;
-    background-image:
-      repeating-linear-gradient(
-        45deg,
-        rgba(255,255,255,0.35),
-        rgba(255,255,255,0.35) 1px,
-        transparent 1px,
-        transparent 18px
-      ),
-      radial-gradient(circle at 20% 30%, rgba(236,72,153,0.25), transparent 45%),
-      radial-gradient(circle at 80% 70%, rgba(251,191,36,0.25), transparent 45%);
-  "
->
-
-  <!-- Decorative shapes -->
-  <div class="fixed top-10 left-10 w-72 h-72 bg-pink-300/30 rounded-full blur-3xl -z-10"></div>
-  <div class="fixed bottom-20 left-20 w-96 h-96 bg-rose-300/30 rounded-full blur-3xl -z-10"></div>
-  <div class="fixed top-24 right-16 w-80 h-80 bg-amber-200/40 rounded-full blur-3xl -z-10"></div>
-
-  <!-- Main card -->
-  <div class="bg-white/80 backdrop-blur p-8 rounded-3xl shadow-2xl w-[420px] text-center">
-
-    <img
-      src="/static/doppi.jpg"
-      alt="Uzbek doppi"
-      class="w-full h-40 object-cover rounded-2xl mb-5"
-    >
-
-    <h2 class="text-2xl font-bold mb-5">🎤 Shevada gapiring</h2>
+<div class="bg-white p-6 rounded-xl shadow-md w-full max-w-xl text-center">
+    <h1 class="text-2xl font-bold mb-4">
+        🎤 Sheva → Adabiy til
+    </h1>
 
     <button
-      id="mic"
-      class="w-24 h-24 rounded-full bg-pink-400 hover:bg-pink-500 text-white text-4xl flex items-center justify-center mx-auto transition shadow-lg"
+        onclick="startRecognition()"
+        class="bg-green-600 text-white px-6 py-3 rounded-full text-lg hover:bg-green-700"
     >
-      🎙️
+        🎙️ Gapiring
     </button>
 
-    <!-- Result -->
-    <div id="result" class="mt-6 space-y-3 hidden text-left">
-      <div class="bg-pink-50 border border-pink-200 rounded-xl p-3">
-        <div class="text-sm text-pink-500 font-semibold">🗣 Sheva</div>
-        <div id="shevaText" class="text-lg font-medium"></div>
-      </div>
+    <p id="recognized" class="mt-4 text-gray-700"></p>
+    <p id="result" class="mt-4 text-xl text-blue-700 font-semibold"></p>
+</div>
 
-      <div class="bg-amber-50 border border-amber-200 rounded-xl p-3">
-        <div class="text-sm text-amber-600 font-semibold">📘 Adabiy</div>
-        <div id="adabiyText" class="text-lg font-medium"></div>
-      </div>
-    </div>
-  </div>
+<script>
+let recognition;
 
-  <!-- Script -->
-  <script>
-    const micBtn = document.getElementById("mic");
-    const resultBox = document.getElementById("result");
-    const shevaText = document.getElementById("shevaText");
-    const adabiyText = document.getElementById("adabiyText");
-
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      alert("Бу браузер овозни танимайди. Chrome ишлатинг.");
+function startRecognition() {
+    if (!('webkitSpeechRecognition' in window)) {
+        alert("Brauzeringiz Web Speech API ni qo‘llab-quvvatlamaydi");
+        return;
     }
 
-    const recognition = new SpeechRecognition();
+    recognition = new webkitSpeechRecognition();
     recognition.lang = "uz-UZ";
-    recognition.interimResults = false;
     recognition.continuous = false;
+    recognition.interimResults = false;
 
-    micBtn.onclick = () => {
-      micBtn.innerText = "🎙️ ...";
-      recognition.start();
-    };
+    recognition.onresult = async function (event) {
+        const text = event.results[0][0].transcript;
+        document.getElementById("recognized").innerText =
+            "🗣️ Sheva: " + text;
 
-    recognition.onresult = async (event) => {
-      const text = event.results[0][0].transcript;
-
-      micBtn.innerText = "🎙️";
-      resultBox.classList.remove("hidden");
-      shevaText.innerText = text;
-      adabiyText.innerText = "⏳ таржима қилинмоқда...";
-
-      try {
-        const res = await fetch("/translate_text", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text })
+        // backend ga yuboramiz
+        const response = await fetch("/translate_text", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ text: text })
         });
 
-        const data = await res.json();
-        adabiyText.innerText = data.literary_word || "Натижа топилмади";
-      } catch (e) {
-        adabiyText.innerText = "❌ Сервер билан боғланишда хато";
-      }
+        const data = await response.json();
+
+        if (data.literary_word) {
+            document.getElementById("result").innerText =
+                "📘 Adabiy: " + data.literary_word;
+        } else {
+            document.getElementById("result").innerText =
+                "⚠️ Adabiy variant topilmadi";
+        }
     };
 
-    recognition.onerror = (e) => {
-      micBtn.innerText = "🎙️";
-      alert("Микрофон хатоси: " + e.error);
-    };
-  </script>
+    recognition.start();
+}
+</script>
 
 </body>
 </html>
