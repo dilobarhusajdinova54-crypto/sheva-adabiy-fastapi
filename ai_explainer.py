@@ -1,23 +1,24 @@
 def explain_word(word: str) -> str:
     explanations = {
         "ketdik": (
-            "“Ketdik” — fe’lning o‘tgan zamon, ko‘plik shakli. "
-            "Harakat avval bajarilganini bildiradi. "
-            "Masalan: “Biz kecha soat oltida ketdik.”"
+            "“Ketdik” — ўтган замон, кўплик шаклидаги феъл. "
+            "Ҳаракат аввал бажарилганини билдиради. "
+            "Масалан: “Биз кеча соат олтида кетдик.”"
         ),
         "kelyapti": (
-            "“Kelyapti” — hozirgi davom zamon fe’li. "
-            "Harakat ayni paytda davom etayotganini bildiradi. "
-            "Masalan: “U hozir uyga kelyapti.”"
+            "“Kelyapti” — ҳозирги давом замон феъли. "
+            "Ҳаракат айни пайтда давом этаётганини билдиради. "
+            "Масалан: “У ҳозир уйга келяпти.”"
         ),
         "ketayapti": (
-            "“Ketayapti” — hozirgi davom zamon fe’li. "
-            "Masalan: “Avtobus bekatdan ketayapti.”"
+            "“Ketayapti” — ҳозирги давом замон феъли. "
+            "Ҳаракат ҳозир бажарилаётганини билдиради. "
+            "Масалан: “Автобус бекатдан кетаяпти.”"
         )
     }
 
     return explanations.get(
         word,
-        f"“{word}” — adabiy o‘zbek tilidagi fe’l. "
-        "Bu demo versiyada AI izohlar bosqichma-bosqich boyitiladi."
+        f"“{word}” — адабий ўзбек тилидаги феъл. "
+        "Бу демо версияда AI изоҳлар босқичма-босқич бойитилади."
     )
