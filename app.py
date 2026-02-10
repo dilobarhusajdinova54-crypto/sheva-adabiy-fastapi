@@ -8,24 +8,18 @@ from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 
 from dialect_mapping import map_dialect
-from ai_explainer import explain_word
+from ai_explainer import explain_word   # 👈 МАНА ШУ ЖОЙ МУҲИМ
 
+app = FastAPI()
 
-# ---------------- APP ----------------
-app = FastAPI(title="Sheva → Adabiy → AI")
-
-
-# ---------------- STATIC ----------------
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
 
 @app.get("/", response_class=HTMLResponse)
 def root():
     with open("static/index.html", encoding="utf-8") as f:
         return f.read()
 
-
-# ---------------- MONGODB (SAFE MODE) ----------------
+# ---------------- MongoDB (optional) ----------------
 MONGO_URL = os.getenv("MONGO_URL")
 col = None
 
@@ -40,8 +34,7 @@ if MONGO_URL:
         print("⚠️ MongoDB disabled:", e)
         col = None
 
-
-# ---------------- TRANSLATION + AI ----------------
+# ---------------- API ----------------
 @app.post("/translate_text")
 async def translate_text(payload: dict = Body(...)):
     raw_text = payload.get("text", "")
@@ -49,39 +42,26 @@ async def translate_text(payload: dict = Body(...)):
     if not raw_text:
         return {"error": "text field is required"}
 
-    # normalization
-    text = raw_text.lower().strip()
-    text = re.sub(r"[^\w\s]", "", text)
+    text = re.sub(r"[^\w\s]", "", raw_text.lower().strip())
 
     literary_word = None
-    source = "none"
+    source = "mapping"
 
-    # 1️⃣ MongoDB
     if col:
         try:
             doc = col.find_one({"dialect_word": text})
             if doc:
                 literary_word = doc.get("literary_word")
                 source = "mongodb"
-        except Exception as e:
-            print("Mongo query error:", e)
+        except:
+            pass
 
-    # 2️⃣ Static mapping
     if not literary_word:
         _, literary_word = map_dialect(text)
-        if literary_word:
-            source = "mapping"
 
-    # 3️⃣ AI explanation (ALWAYS SAFE)
     ai_explanation = None
     if literary_word:
-        try:
-            ai_explanation = explain_word(literary_word)
-        except Exception as e:
-            print("AI explain error:", e)
-            ai_explanation = (
-                f"'{literary_word}' — адабий ўзбек тилида ишлатиладиган сўз."
-            )
+        ai_explanation = explain_word(literary_word)
 
     return {
         "recognized_text": text,
