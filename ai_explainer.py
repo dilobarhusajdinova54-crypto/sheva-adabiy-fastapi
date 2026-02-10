@@ -1,59 +1,23 @@
-"""
-AI-style explanation module (DEMO)
-
-Bu modul:
-- adabiy so‘z bo‘yicha
-- ta’rif
-- qo‘llanish
-- misollar
-- Toshkent shevasidagi variantlarni
-qaytaradi.
-
-Keyinchalik bu joyga:
-- OpenAI
-- Wikipedia
-- Lug‘at API
-oson ulanadi.
-"""
-
-def explain_word(word: str):
-    EXPLANATIONS = {
-        "ketdik": {
-            "definition": (
-                "«Ketdik» — «ketmoq» feʼlining "
-                "o‘tgan zamondagi, ko‘plik birinchi shaxs shakli."
-            ),
-            "usage": (
-                "Gapiruvchi va u bilan birga bo‘lgan odamlar "
-                "birgalikda joyni tark etganini bildiradi."
-            ),
-            "examples": [
-                "Biz darsdan keyin uyga ketdik.",
-                "Do‘stlar bilan birga shaharga ketdik."
-            ],
-            "dialects": {
-                "Toshkent shevasi": ["kettu", "ketti"],
-                "Og‘zaki nutq": ["ketvoldik"]
-            }
-        },
-
-        "kelyapti": {
-            "definition": (
-                "«Kelyapti» — «kelmoq» feʼlining "
-                "hozirgi zamon davomiy shakli."
-            ),
-            "usage": (
-                "Harakat hozirgi paytda davom etayotganini bildiradi."
-            ),
-            "examples": [
-                "U hozir ishga kelyapti.",
-                "Mehmonlar biznikiga kelyapti."
-            ],
-            "dialects": {
-                "Toshkent shevasi": ["kevotti"],
-                "Og‘zaki nutq": ["kelvotti"]
-            }
-        }
+def explain_word(word: str) -> str:
+    explanations = {
+        "ketdik": (
+            "“Ketdik” — fe’lning o‘tgan zamon, ko‘plik shakli. "
+            "Harakat avval bajarilganini bildiradi. "
+            "Masalan: “Biz kecha soat oltida ketdik.”"
+        ),
+        "kelyapti": (
+            "“Kelyapti” — hozirgi davom zamon fe’li. "
+            "Harakat ayni paytda davom etayotganini bildiradi. "
+            "Masalan: “U hozir uyga kelyapti.”"
+        ),
+        "ketayapti": (
+            "“Ketayapti” — hozirgi davom zamon fe’li. "
+            "Masalan: “Avtobus bekatdan ketayapti.”"
+        )
     }
 
-    return EXPLANATIONS.get(word)
+    return explanations.get(
+        word,
+        f"“{word}” — adabiy o‘zbek tilidagi fe’l. "
+        "Bu demo versiyada AI izohlar bosqichma-bosqich boyitiladi."
+    )
