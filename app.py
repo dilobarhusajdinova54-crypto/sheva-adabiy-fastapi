@@ -5,10 +5,8 @@ import os
 import re
 
 from pymongo import MongoClient
-from pymongo.errors import ServerSelectionTimeoutError
-
 from dialect_mapping import map_dialect
-from ai_explainer import explain_word   # 👈 МАНА ШУ ЖОЙ МУҲИМ
+from ai_explainer import explain_word
 
 app = FastAPI()
 
@@ -19,7 +17,7 @@ def root():
     with open("static/index.html", encoding="utf-8") as f:
         return f.read()
 
-# ---------------- MongoDB (optional) ----------------
+# ---------------- MongoDB ----------------
 MONGO_URL = os.getenv("MONGO_URL")
 col = None
 
@@ -42,30 +40,43 @@ async def translate_text(payload: dict = Body(...)):
     if not raw_text:
         return {"error": "text field is required"}
 
-    text = re.sub(r"[^\w\s]", "", raw_text.lower().strip())
+    text = raw_text.lower().strip()
 
     literary_word = None
     source = "mapping"
 
+    # MongoDB lookup
     if col:
         try:
             doc = col.find_one({"dialect_word": text})
             if doc:
                 literary_word = doc.get("literary_word")
                 source = "mongodb"
-        except:
-            pass
+        except Exception as e:
+            print("Mongo error:", e)
 
+    # Static mapping
     if not literary_word:
-        _, literary_word = map_dialect(text)
+        result = map_dialect(text)
+        if isinstance(result, tuple):
+            _, literary_word = result
+        else:
+            literary_word = result
 
+    # AI explanation
     ai_explanation = None
     if literary_word:
-        ai_explanation = explain_word(literary_word)
+        try:
+            ai_explanation = explain_word(literary_word)
+        except Exception as e:
+            ai_explanation = "Izoh topilmadi"
+            print("AI error:", e)
 
     return {
         "recognized_text": text,
         "literary_word": literary_word,
+        "mapped": literary_word,
         "source": source,
-        "ai_explanation": ai_explanation
+        "ai_explanation": ai_explanation,
+        "explanation": ai_explanation
     }

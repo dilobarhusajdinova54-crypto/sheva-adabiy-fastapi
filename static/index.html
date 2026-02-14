@@ -1,49 +1,16 @@
-<!DOCTYPE html>
-<html lang="uz">
-<head>
-    <meta charset="UTF-8">
-    <title>Sheva → Adabiy til (Voice Demo)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-
-<div class="bg-white p-6 rounded-xl shadow-md w-full max-w-xl text-center">
-    <h1 class="text-2xl font-bold mb-4">
-        🎤 Sheva → Adabiy til
-    </h1>
-
-    <button
-        onclick="startRecognition()"
-        class="bg-green-600 text-white px-6 py-3 rounded-full text-lg hover:bg-green-700"
-    >
-        🎙️ Gapiring
-    </button>
-
-    <div id="output" class="mt-6 text-left hidden">
-        <p id="recognized" class="text-gray-700 mb-2"></p>
-        <p id="result" class="text-blue-700 font-semibold mb-3"></p>
-
-        <!-- AI explanation -->
-        <div
-            id="aiBox"
-            class="hidden mt-3 p-4 bg-green-50 border-l-4 border-green-600 text-gray-800 rounded"
-        >
-            <p class="font-semibold mb-1">🤖 AI izoh:</p>
-            <p id="aiExplanation"></p>
-        </div>
-    </div>
-</div>
-
 <script>
 let recognition;
 
 function startRecognition() {
-    if (!('webkitSpeechRecognition' in window)) {
-        alert("Brauzeringiz Web Speech API ni qo‘llab-quvvatlamaydi");
+    const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+        alert("Brauzer qo‘llab-quvvatlamaydi");
         return;
     }
 
-    recognition = new webkitSpeechRecognition();
+    recognition = new SpeechRecognition();
     recognition.lang = "uz-UZ";
     recognition.continuous = false;
     recognition.interimResults = false;
@@ -52,41 +19,54 @@ function startRecognition() {
         const text = event.results[0][0].transcript;
 
         document.getElementById("output").classList.remove("hidden");
+
         document.getElementById("recognized").innerText =
             "🗣️ Sheva: " + text;
 
-        const response = await fetch("/translate_text", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ text: text })
-        });
+        document.getElementById("result").innerText = "⏳ Qidirilmoqda...";
 
-        const data = await response.json();
+        try {
+            const response = await fetch("/translate_text", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ text: text })
+            });
 
-        // Adabiy so‘z
-        if (data.literary_word) {
+            const data = await response.json();
+
+            console.log("API:", data);
+
+            if (data.error) {
+                document.getElementById("result").innerText =
+                    "❌ " + data.error;
+                return;
+            }
+
+            if (data.literary_word) {
+                document.getElementById("result").innerText =
+                    "📘 Adabiy: " + data.literary_word;
+            } else {
+                document.getElementById("result").innerText =
+                    "⚠️ Topilmadi";
+            }
+
+            if (data.ai_explanation) {
+                document.getElementById("aiBox").classList.remove("hidden");
+                document.getElementById("aiExplanation").innerText =
+                    data.ai_explanation;
+            } else {
+                document.getElementById("aiBox").classList.add("hidden");
+            }
+
+        } catch (error) {
+            console.error(error);
             document.getElementById("result").innerText =
-                "📘 Adabiy: " + data.literary_word;
-        } else {
-            document.getElementById("result").innerText =
-                "⚠️ Adabiy variant topilmadi";
-        }
-
-        // AI izoh
-        if (data.ai_explanation) {
-            document.getElementById("aiBox").classList.remove("hidden");
-            document.getElementById("aiExplanation").innerText =
-                data.ai_explanation;
-        } else {
-            document.getElementById("aiBox").classList.add("hidden");
+                "❌ Server xatosi";
         }
     };
 
     recognition.start();
 }
 </script>
-
-</body>
-</html>
