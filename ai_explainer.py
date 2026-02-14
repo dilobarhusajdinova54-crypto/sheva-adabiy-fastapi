@@ -1,3 +1,5 @@
+import requests
+
 def explain_word(word: str) -> str:
     explanations = {
         "ketdik": (
@@ -17,8 +19,24 @@ def explain_word(word: str) -> str:
         )
     }
 
-    return explanations.get(
-        word,
-        f"“{word}” — адабий ўзбек тилидаги феъл. "
-        "Бу демо версияда AI изоҳлар босқичма-босқич бойитилади."
-    )
+    # 1️⃣ Агар базада бўлса → шуни қайтар
+    if word in explanations:
+        return explanations[word]
+
+    # 2️⃣ Wikipedia дан олиш
+    try:
+        url = f"https://uz.wikipedia.org/api/rest_v1/page/summary/{word}"
+        res = requests.get(url)
+
+        if res.status_code == 200:
+            data = res.json()
+            extract = data.get("extract")
+
+            if extract:
+                return extract
+
+    except Exception as e:
+        print("Wikipedia error:", e)
+
+    # 3️⃣ fallback
+    return f"“{word}” ҳақида изоҳ топилмади."
